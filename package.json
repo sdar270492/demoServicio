@@ -1,0 +1,14 @@
+{
+  "name": "demo-servicio",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "gateway",
+    "services/*"
+  ],
+  "scripts": {
+    "gateway": "npm run dev --workspace=gateway",
+    "user-service": "npm run dev --workspace=user-service",
+    "install:all": "npm install"
+  }
+}
