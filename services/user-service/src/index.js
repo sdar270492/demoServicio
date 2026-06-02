@@ -15,9 +15,18 @@ const DeleteUser = require('./application/use-cases/DeleteUser');
 const UserController = require('./presentation/controllers/UserController');
 const createUserRoutes = require('./presentation/routes/userRoutes');
 
-// ── Dependency Injection (manual) ──────────────────────────────────────────
-const userRepository = new InMemoryUserRepository();
+// ── Repositorio: Supabase en producción, en memoria en local ───────────────
+let userRepository;
 
+if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  const SupabaseUserRepository = require('./infrastructure/repositories/SupabaseUserRepository');
+  const supabaseClient = require('./infrastructure/database/supabaseClient');
+  userRepository = new SupabaseUserRepository(supabaseClient);
+} else {
+  userRepository = new InMemoryUserRepository();
+}
+
+// ── Dependency Injection (manual) ──────────────────────────────────────────
 const useCases = {
   createUser: new CreateUser(userRepository),
   getUser: new GetUser(userRepository),
@@ -30,7 +39,6 @@ const userController = new UserController(useCases);
 
 // ── Express App ────────────────────────────────────────────────────────────
 const app = express();
-const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
@@ -43,6 +51,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`user-service running on http://localhost:${PORT}`);
-});
+// ── Local dev ───────────────────────────────────────────────────────────────
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => console.log(`user-service running on http://localhost:${PORT}`));
+}
+
+module.exports = app;

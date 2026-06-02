@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { PORT } = require('./config');
@@ -15,6 +16,9 @@ app.use('/api', routes);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Gateway running on http://localhost:${PORT}`);
-});
+// ── Local dev ───────────────────────────────────────────────────────────────
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Gateway running on http://localhost:${PORT}`));
+}
+
+module.exports = app;
