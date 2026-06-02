@@ -1,4 +1,5 @@
 const { Router } = require('express');
+const axios = require('axios');
 const { SERVICES } = require('../config');
 const auth = require('../middleware/auth');
 
@@ -6,24 +7,22 @@ const router = Router();
 
 const proxyRequest = async (req, res, next, targetUrl) => {
   try {
-    const init = {
+    const config = {
       method: req.method,
+      url: targetUrl,
       headers: { 'content-type': 'application/json' },
     };
 
     if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.body) {
-      init.body = JSON.stringify(req.body);
+      config.data = req.body;
     }
 
-    const response = await fetch(targetUrl, init);
-
-    if (response.status === 204) {
-      return res.status(204).send();
-    }
-
-    const data = await response.json();
-    res.status(response.status).json(data);
+    const response = await axios(config);
+    res.status(response.status).json(response.data);
   } catch (err) {
+    if (err.response) {
+      return res.status(err.response.status).json(err.response.data);
+    }
     next(err);
   }
 };
